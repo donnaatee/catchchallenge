@@ -97,7 +97,6 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
       </ol>
       <div class="toggles">
         <button class="pill" id="tgSound">Sound</button>
-        <button class="pill" id="tgPeek" title="Show each plushie's challenge while you aim">Peek at challenges</button>
       </div>
     </div>
     <div class="card">
@@ -185,6 +184,7 @@ try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e){ S = null; }
 if(!S || S.date !== todayStr() || !Array.isArray(S.assign) || S.assign.length !== ZONES.length) S = newDay();
 let prefs = {sound:true, peek:false};
 try { Object.assign(prefs, JSON.parse(localStorage.getItem(PKEY))||{}); } catch(e){}
+prefs.peek = false;
 const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} };
 const savePrefs = () => { try{ localStorage.setItem(PKEY, JSON.stringify(prefs)); }catch(e){} };
 
@@ -609,9 +609,8 @@ function tickTimers(){
 setInterval(tickTimers, 250);
 
 /* ---------------- toggles + reset ---------------- */
-function syncToggles(){ $('#tgSound').classList.toggle('on', prefs.sound); $('#tgSound').textContent = prefs.sound ? '🔊 Sound on' : '🔇 Sound off'; $('#tgPeek').classList.toggle('on', prefs.peek); }
+function syncToggles(){ $('#tgSound').classList.toggle('on', prefs.sound); $('#tgSound').textContent = prefs.sound ? '🔊 Sound on' : '🔇 Sound off'; }
 $('#tgSound').onclick = () => { prefs.sound = !prefs.sound; savePrefs(); syncToggles(); if(prefs.sound){ ac(); sfx.tick(); } };
-$('#tgPeek').onclick = () => { prefs.peek = !prefs.peek; savePrefs(); syncToggles(); };
 let resetArm = 0;
 $('#reset').onclick = e => {
   if(Date.now() - resetArm > 3000){ resetArm = Date.now(); e.target.textContent = 'Tap again to confirm'; setTimeout(()=>{ e.target.textContent = 'Start a fresh day (resets coins and catches)'; }, 3000); return; }
