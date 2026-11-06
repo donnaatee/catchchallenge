@@ -545,6 +545,7 @@ function setStatus(){
 
 /* ---------------- challenge modal ---------------- */
 const modal = $('#modal'), sheet = $('#sheet');
+const lockedNow = w => !!(w && w.t && !w.done && (w.t.running || w.t.finished || w.t.remaining < w.t.total));  // timer started or finished: only Done leaves
 function openModal(i){ openIdx = i; renderModal(); modal.classList.add('open'); }
 function closeModal(){ modal.classList.remove('open'); openIdx = -1; renderList(); setStatus(); }
 function renderModal(){
@@ -555,6 +556,7 @@ function renderModal(){
     timerHTML = `<div class="ringwrap"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="#ffe0e8" stroke-width="11"/><circle id="ringFg" cx="60" cy="60" r="52" fill="none" stroke="#ff7fa3" stroke-width="11" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="tm" id="tmTxt">${fmt(w.t.remaining)}</div></div>`;
   }
   const canDone = w.done || !w.t || w.t.finished;
+  const locked = lockedNow(w);
   let timerBtn = '';
   if(w.t && !w.done && !w.t.finished) timerBtn = `<button class="btn" id="tBtn">${w.t.running ? 'Pause' : (w.t.remaining < w.t.total ? 'Resume' : 'Start timer')}</button>`;
   sheet.innerHTML = `
@@ -565,11 +567,11 @@ function renderModal(){
     ${timerHTML}
     <div class="row">${timerBtn}</div>
     <div class="row">
-      <button class="btn alt" id="laterBtn">${w.done ? 'Close' : 'Do it later'}</button>
+      ${locked ? '' : `<button class="btn alt" id="laterBtn">${w.done ? 'Close' : 'Do it later'}</button>`}
       ${w.done ? '' : `<button class="btn good" id="doneBtn" ${canDone ? '' : 'disabled'}>Done ✓</button>`}
     </div>`;
   const pc = $('#plc').getContext('2d'); plush(pc, z.type, 130, 140, 190, 0);
-  $('#laterBtn').onclick = closeModal;
+  if($('#laterBtn')) $('#laterBtn').onclick = closeModal;
   const db = $('#doneBtn'); if(db) db.onclick = () => { w.done = true; if(w.t){ w.t.running = false; } save(); sfx.done(); burst(190, 200, 40, true); closeModal(); toast('Challenge complete! 🎉'); };
   const tb = $('#tBtn'); if(tb) tb.onclick = () => {
     ac();
@@ -584,8 +586,8 @@ function updateTimerUI(){
   const tx = $('#tmTxt'), rg = $('#ringFg'); if(tx) tx.textContent = fmt(w.t.remaining);
   if(rg) rg.setAttribute('stroke-dashoffset', String(326.7 * (1 - w.t.remaining / w.t.total)));
 }
-addEventListener('keydown', e => { if(e.key === 'Escape' && openIdx >= 0) closeModal(); });
-modal.addEventListener('pointerdown', e => { if(e.target === modal) closeModal(); });
+addEventListener('keydown', e => { if(e.key === 'Escape' && openIdx >= 0 && !lockedNow(S.won[openIdx])) closeModal(); });
+modal.addEventListener('pointerdown', e => { if(e.target === modal && !lockedNow(S.won[openIdx])) closeModal(); });
 
 /* ---------------- timers ---------------- */
 function tickTimers(){
